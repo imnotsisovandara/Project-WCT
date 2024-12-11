@@ -1,16 +1,32 @@
 'use client'
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Heart } from 'lucide-react';
 
-export default function ProductCard({ product }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+export default function ProductCard({ product, isFavorite: initialIsFavorite, onToggleFavorite }) {
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+
+  useEffect(() => {
+    setIsFavorite(initialIsFavorite);
+  }, [initialIsFavorite]);
 
   const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    console.log(`Product ${product.id} ${isFavorite ? 'removed from' : 'added to'} favorites`);
+    const newFavoriteStatus = !isFavorite;
+    setIsFavorite(newFavoriteStatus);
+    
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    if (newFavoriteStatus) {
+      favorites.push(product);
+    } else {
+      favorites = favorites.filter(fav => fav.id !== product.id);
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+
+    if (onToggleFavorite) {
+      onToggleFavorite(product.id, newFavoriteStatus);
+    }
   };
 
   return (
@@ -33,7 +49,7 @@ export default function ProductCard({ product }) {
           onClick={toggleFavorite}
           className={`mt-2 ${isFavorite ? 'text-red-500' : 'text-gray-500'}`}
         >
-          <Heart className="h-4 w-4" />
+          <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
         </Button>
       </div>
     </div>
