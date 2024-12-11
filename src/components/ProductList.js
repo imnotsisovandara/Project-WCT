@@ -8,6 +8,7 @@ export default function ProductList() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,17 +25,22 @@ export default function ProductList() {
 
     fetchProducts();
 
-    // Set up polling to check for updates every 5 seconds
-    const intervalId = setInterval(fetchProducts, 5000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
+    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setFavorites(storedFavorites.map(fav => fav.id));
   }, []);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleToggleFavorite = (productId, isFavorite) => {
+    if (isFavorite) {
+      setFavorites([...favorites, productId]);
+    } else {
+      setFavorites(favorites.filter(id => id !== productId));
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center py-8">Loading products...</div>;
@@ -51,7 +57,12 @@ export default function ProductList() {
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map(product => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard 
+            key={product.id} 
+            product={product} 
+            isFavorite={favorites.includes(product.id)}
+            onToggleFavorite={handleToggleFavorite}
+          />
         ))}
       </div>
     </div>
