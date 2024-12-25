@@ -19,7 +19,6 @@ export default function RootLayout({ children }) {
             <div>
               <Link href="/" className="mr-4">Home</Link>
               <Link href="/favorites" className="mr-4">Favorites</Link>
-              <Link href="/admin" className="mr-4">Admin</Link>
               <Link href="/login" className="mr-4">Login</Link>
               <Link href="/register">Register</Link>
             </div>
