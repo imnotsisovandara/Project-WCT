@@ -1,17 +1,55 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, firestore } from "../../firebase/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { app } from "../../firebase/firebase";
+import { User } from "firebase/auth";
+
 import Link from "next/link";
 
 const LoginPage = () => {
+  const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }else{
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      if (user) {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("An unknown error occurred while signing in with Google.");
+      }
+      console.error("Error signing in with Google Auth:", error);
+    }
+  };
+  
+
+  
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -90,6 +128,13 @@ const LoginPage = () => {
             className="py-3.5 px-7 text-sm font-semibold tracking-wider rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
           >
             Login
+          </button>
+          <button
+          onClick={signInWithGoogle}
+            type="submit"
+            className="py-3.5 px-7 text-sm font-semibold tracking-wider rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+          >
+            Sign In with Google
           </button>
         </div>
       </form>
